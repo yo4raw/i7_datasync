@@ -32,9 +32,10 @@
 ```bash
 TURSO_DATABASE_URL=libsql://your-database.turso.io
 TURSO_AUTH_TOKEN=your-auth-token
-SPREADSHEET_ID=your-spreadsheet-id
 LOG_LEVEL=INFO  # オプションや: DEBUG, INFO, WARNING, ERROR
 ```
+
+**注意**: SPREADSHEET_IDは`src/constants.py`に直接書き込むんや！環境変数やないで！
 
 ### Docker開発環境（ワンパンや！）
 

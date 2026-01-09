@@ -3,7 +3,7 @@
 import os
 import sys
 
-from constants import SONGS_GID, CARDS_GID, BROOCHES_GID
+from constants import SONGS_GID, CARDS_GID, BROOCHES_GID, SPREADSHEET_ID
 from csv_fetcher import CSVFetcher
 from db_client import DatabaseClient
 from validators import DataValidator
@@ -23,9 +23,8 @@ def main():
         # 環境変数読み込み
         turso_url = os.getenv("TURSO_DATABASE_URL")
         turso_token = os.getenv("TURSO_AUTH_TOKEN")
-        spreadsheet_id = os.getenv("SPREADSHEET_ID")
 
-        if not all([turso_url, turso_token, spreadsheet_id]):
+        if not all([turso_url, turso_token]):
             logger.error("Missing required environment variables")
             return 1
 
@@ -59,7 +58,7 @@ def main():
         )
 
         # 同期実行
-        results = orchestrator.sync_all_tables(spreadsheet_id, sheet_configs)
+        results = orchestrator.sync_all_tables(SPREADSHEET_ID, sheet_configs)
 
         # 結果サマリー
         success_count = sum(1 for r in results if r.success)
