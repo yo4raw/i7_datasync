@@ -29,9 +29,16 @@ class DataValidator:
         for idx, row in df.iterrows():
             row_errors = []
 
-            # IDフィールドチェック
+            # 必須フィールドチェック: ID、分類、アーティスト名
             if pd.isna(row.get('ID')):
                 row_errors.append(f"Row {idx}: Missing ID")
+
+            # 分類とアーティスト名が両方とも存在することを確認
+            if pd.isna(row.get('分類')) or str(row.get('分類')).strip() == '':
+                row_errors.append(f"Row {idx}: Missing 分類")
+
+            if pd.isna(row.get('アーティスト名')) or str(row.get('アーティスト名')).strip() == '':
+                row_errors.append(f"Row {idx}: Missing アーティスト名")
 
             # 数値フィールドチェック（存在する場合のみ）
             numeric_fields = ['ノーツ数', '秒数']
@@ -44,7 +51,9 @@ class DataValidator:
 
             if row_errors:
                 errors.extend(row_errors)
-                logger.warning(f"Validation error in songs data: {row_errors}")
+                # デバッグ用に最初の10件のみログ出力
+                if len(errors) <= 30:
+                    logger.warning(f"Validation error in songs data: {row_errors}")
             else:
                 valid_indices.append(idx)
 

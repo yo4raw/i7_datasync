@@ -79,6 +79,8 @@ class SchemaManager:
         type_mapping = {
             'int64': 'INTEGER',
             'int32': 'INTEGER',
+            'Int64': 'INTEGER',  # pandas nullable integer
+            'Int32': 'INTEGER',  # pandas nullable integer
             'float64': 'REAL',
             'float32': 'REAL',
             'object': 'TEXT',
@@ -88,6 +90,11 @@ class SchemaManager:
 
         column_types = {}
         for column in df.columns:
+            # ID列は常にINTEGERとして扱う
+            if column == 'ID':
+                column_types[column] = 'INTEGER'
+                continue
+
             dtype_str = str(df[column].dtype)
             sql_type = type_mapping.get(dtype_str, 'TEXT')
             column_types[column] = sql_type
