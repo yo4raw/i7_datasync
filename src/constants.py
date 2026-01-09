@@ -1,7 +1,7 @@
 """定数定義モジュール"""
 
 # Google Spreadsheet ID（固定値）
-SPREADSHEET_ID = "YOUR_SPREADSHEET_ID_HERE"  # ここに実際のSpreadsheet IDを設定してください
+SPREADSHEET_ID = "1UxM2ekw7KlTTbCfPFMa6ihywrUMTryP5Zrv1DVEUKy4"
 
 # Google Spreadsheet GID定数
 SONGS_GID = 1083871743
