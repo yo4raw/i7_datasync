@@ -126,7 +126,7 @@ class SyncOrchestrator:
             skipped_count = len(df) - len(valid_df)
 
             # 3. データ変換
-            transformed_df = self.transformer.transform_for_database(valid_df)
+            transformed_df = self.transformer.transform_for_database(valid_df, table_name=table_name)
 
             # 4. テーブル作成（存在しない場合） - 変換後のDataFrameを使用
             self.schema_manager.ensure_table_exists(table_name, transformed_df)

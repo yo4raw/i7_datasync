@@ -39,7 +39,8 @@ class CSVFetcher:
         spreadsheet_id: str,
         gid: int,
         timeout: int = 30,
-        header: int = 0
+        header: int = 0,
+        use_multirow_header: bool = False
     ) -> pd.DataFrame:
         """
         指定されたSpreadsheetシートをCSVエクスポートURLから取得してDataFrameに変換
@@ -49,6 +50,7 @@ class CSVFetcher:
             gid: シートのgid
             timeout: HTTPリクエストタイムアウト（秒）
             header: ヘッダー行の位置（0-indexed）。デフォルトは0（1行目）
+            use_multirow_header: 2行ヘッダーを解析するかどうか
 
         Returns:
             pandas DataFrame
@@ -81,7 +83,11 @@ class CSVFetcher:
 
                 # DataFrameに変換
                 try:
-                    df = pd.read_csv(StringIO(response.text), header=header)
+                    if use_multirow_header:
+                        # 2行ヘッダーを解析
+                        df = self._parse_multirow_header(response.text, header)
+                    else:
+                        df = pd.read_csv(StringIO(response.text), header=header)
 
                     logger.info(
                         f"Successfully fetched CSV",
@@ -142,6 +148,60 @@ class CSVFetcher:
                     }
                 )
                 raise CSVFetchError(f"Request error: {e}")
+
+    def _parse_multirow_header(self, csv_text: str, data_start_row: int) -> pd.DataFrame:
+        """
+        2行ヘッダーを解析してカテゴリー名とカラム名を結合
+
+        Args:
+            csv_text: CSVテキスト
+            data_start_row: データ開始行（0-indexed）。例: 1なら行2からデータ
+
+        Returns:
+            pandas DataFrame（結合されたカラム名を持つ）
+        """
+        lines = csv_text.split('\n')
+
+        # Row 0: Categories, Row 1: Column names
+        category_row = lines[0].split(',')
+        column_row = lines[data_start_row].split(',')
+
+        # カテゴリーとカラム名を結合してユニークなカラム名を作成
+        combined_columns = []
+        current_category = ""
+
+        for i in range(len(column_row)):
+            # カテゴリーを取得（範囲外の場合は空文字）
+            cat = category_row[i].strip() if i < len(category_row) else ""
+            name = column_row[i].strip()
+
+            # カテゴリーが空でない場合は更新
+            if cat:
+                current_category = cat
+
+            # 組み合わせカラム名を生成
+            if current_category and name:
+                combined = f"{current_category}_{name}"
+            elif name:
+                combined = name
+            else:
+                combined = f"Unnamed_{i}"
+
+            combined_columns.append(combined)
+
+        # データ部分を読み込み（header=data_start_row+1でデータ開始）
+        df = pd.read_csv(
+            StringIO(csv_text),
+            header=data_start_row,
+            skiprows=None
+        )
+
+        # カラム名を結合したものに置き換え
+        df.columns = combined_columns[:len(df.columns)]
+
+        logger.debug(f"Parsed multirow header: {len(combined_columns)} columns created")
+
+        return df
 
     def _build_csv_url(self, spreadsheet_id: str, gid: int) -> str:
         """CSVエクスポートURLを構築"""

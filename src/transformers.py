@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 class DataTransformer:
     """データ変換サービス"""
 
-    def transform_for_database(self, df: pd.DataFrame) -> pd.DataFrame:
+    def transform_for_database(self, df: pd.DataFrame, table_name: str = None) -> pd.DataFrame:
         """
         SpreadsheetのDataFrameをデータベース挿入用に変換
 
@@ -33,6 +33,18 @@ class DataTransformer:
 
         # 空文字列をNaNに変換
         df_copy = df_copy.replace('', pd.NA)
+
+        # songsテーブルの場合、Shout/Beat/Melodyノーツ数カラムのnullを0に置き換え
+        if table_name == 'songs':
+            # カラム名が "カテゴリー_Shout×1白" のような形式になるため、contains + endsで判定
+            notes_columns = [col for col in df_copy.columns if
+                           ('Shout' in col or 'Beat' in col or 'Melody' in col)
+                           and (col.endswith('白') or col.endswith('色'))]
+
+            for col in notes_columns:
+                if col in df_copy.columns:
+                    df_copy[col] = df_copy[col].fillna(0)
+                    logger.debug(f"Filled null values with 0 in column: {col}")
 
         # データ型の最適化
         for column in df_copy.columns:
